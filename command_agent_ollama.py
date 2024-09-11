@@ -2,12 +2,11 @@ import os
 import subprocess
 import sys
 import time
-from rich import print
 import typer
 import ollama
+from rich import print
 
-# Set up Ollama model
-ollama_model = "gemma2:2b-instruct-q4_0"
+LLM_MODEL = "gemma2:2b-instruct-q4_0"
 
 SYSTEM = """
 You are an autonomous coding agent with the ability to read, write, and execute code.
@@ -30,7 +29,6 @@ Instructions:
 Output format:
 - Provide a brief explanation of your next action.
 - Output the exact command to be executed.
-- Use '<|Step-Finished|>' on a new line when step is completed.
 - Use '<|DONE|>' on a new line when the whole task is completed.
 
 Example output:
@@ -50,9 +48,8 @@ Do not write anything polite or somethig like 'Let me know if you want to explor
 """
 
 
-# Function to interact with Ollama LLM
 def ask_llm_ollama(system_prompt, user_prompt):
-    response = ollama.chat(model=ollama_model, messages=[
+    response = ollama.chat(model='qwen2:0.5b', messages=[
         {
             'role': 'system',
             'content': system_prompt,
@@ -62,60 +59,47 @@ def ask_llm_ollama(system_prompt, user_prompt):
             'content': user_prompt,
         },
     ])
+    
     answer = response['message']['content']
     return answer
 
-# Function to escape shell arguments
-def quote(string: str) -> str:
-    # Equivalent of PHP's escapeshellarg
-    return "'{}'".format(string.replace("'", "'\\''"))
+def chat(*, prompt: str, system: str | None = None) -> str:
+    if system:
+        response = ask_llm_ollama(system, prompt)
+    else:
+        response = ask_llm_ollama(SYSTEM, prompt)
 
-# Main function
+    print(f"[blue][PROMPT][/blue] {prompt}")
+    print(f"[yellow][RESPONSE][/yellow] {response}")
+    return response
+
 def main(prompt: str):
-    response = ask_llm_ollama(
-        system_prompt=SYSTEM,
-        user_prompt=f"GOAL: {prompt}\n\nWHAT IS YOUR OVERALL PLAN?"
+    response = chat(
+     prompt=f"GOAL: {prompt}\n\nWHAT IS YOUR OVERALL PLAN?", 
+     system=SYSTEM
     )
 
-    print(f"[blue][PROMPT][/blue] GOAL: {prompt}")
-    print(f"[yellow][RESPONSE][/yellow] {response}")
-
     while True:
-        next_command = ask_llm_ollama(
-            system_prompt=SYSTEM,
-            user_prompt="SHELL COMMAND TO EXECUTE OR `<|DONE|>`. NO ADDITIONAL CONTEXT OR EXPLANATION:"
+        response = chat(
+            prompt="SHELL COMMAND TO EXECUTE OR DONE. NO ADDITIONAL CONTEXT OR EXPLANATION:"
         ).strip()
-
-        print(f"[blue][PROMPT][/blue] SHELL COMMAND TO EXECUTE OR `<|DONE|>`:")
-        print(f"[yellow][RESPONSE][/yellow] {next_command}")
-
-        if "<|DONE|>" in next_command:
+        if response == "DONE":
             break
 
         time.sleep(3)
 
         try:
             output = subprocess.check_output(
-                next_command, stderr=subprocess.STDOUT, shell=True
+                response, stderr=subprocess.STDOUT, shell=True
             ).decode()
             return_code = 0
         except subprocess.CalledProcessError as e:
             output = e.output.decode()
             return_code = e.returncode
 
-        observation = ask_llm_ollama(
-            system_prompt=SYSTEM,
-            user_prompt=f"COMMAND COMPLETED WITH RETURN CODE: {return_code}. OUTPUT:\n{output}\n\nWHAT ARE YOUR OBSERVATIONS?"
+        response = chat(
+            prompt=f"COMMAND COMPLETED WITH RETURN CODE: {return_code}. OUTPUT:\n{output}\n\nWHAT ARE YOUR OBSERVATIONS?"
         )
 
-        print(f"[blue][PROMPT][/blue] COMMAND COMPLETED WITH RETURN CODE: {return_code}. OUTPUT:")
-        print(output)
-        print(f"\n[blue][PROMPT][/blue] WHAT ARE YOUR OBSERVATIONS?")
-        print(f"[yellow][RESPONSE][/yellow] {observation}")
-
-# Set up Typer CLI
 if __name__ == "__main__":
     typer.run(main)
-
-# run:
-# python3 command_agent_ollama.py "PROMPT"
