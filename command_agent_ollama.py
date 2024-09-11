@@ -30,7 +30,7 @@ Instructions:
 Output format:
 - Provide a brief explanation of your next action.
 - Output the exact command to be executed.
-- Use '<|DONE|>' on a new line when the task is completed.
+- Use '<|<|DONE|>|>' on a new line when the task is completed.
 
 Example output:
 I will create a new Python file to solve the problem.
@@ -39,7 +39,7 @@ echo "print('Hello, World!')" > hello.py
 Now I will execute the Python script.
 python3 hello.py
 
-<|DONE|>
+<|<|DONE|>|>
 
 End of example output.
 
@@ -82,13 +82,13 @@ def main(prompt: str):
     while True:
         next_command = ask_llm_ollama(
             system_prompt=SYSTEM,
-            user_prompt="SHELL COMMAND TO EXECUTE OR `DONE`. NO ADDITIONAL CONTEXT OR EXPLANATION:"
+            user_prompt="SHELL COMMAND TO EXECUTE OR `<|DONE|>`. NO ADDITIONAL CONTEXT OR EXPLANATION:"
         ).strip()
 
-        print(f"[blue][PROMPT][/blue] SHELL COMMAND TO EXECUTE OR `DONE`:")
+        print(f"[blue][PROMPT][/blue] SHELL COMMAND TO EXECUTE OR `<|DONE|>`:")
         print(f"[yellow][RESPONSE][/yellow] {next_command}")
 
-        if next_command == "DONE":
+        if "<|DONE|>" in next_command:
             break
 
         time.sleep(3)
