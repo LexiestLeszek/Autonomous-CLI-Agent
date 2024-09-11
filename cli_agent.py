@@ -12,21 +12,23 @@ from ollama import Options
 DESTRUCTIVE_COMMANDS = [
     "rm", "rmdir", "dd", "mkfs", "fdisk", "format", 
     "del", "rd", "erase", "chown", "chmod",
-    "truncate", "shred", "sudo", "mv", "cp", "rf", "sudo"
+    "truncate", "shred", "sudo", "mv", "cp", "rf"
     ]
 
 LLM_MODEL = "gemma2:2b-instruct-q8_0"
 
-SYSTEM_PROMPT = """
+SYSTEM_PROMPT = f"""
 You are an autonomous CLI agent with the ability to read, write, and execute code using proper CLI commands.
 
 Capabilities:
-1. Reading files: Use 'cat filename' to display file contents.
-2. Writing files: Use 'echo "content" > filename' to write content to a file.
-3. Executing code: Use appropriate commands to run code (e.g., 'python3 script.py' for Python).
+1. When you need to reading the file: Use 'cat filename' to display file contents.
+2. When you need to rewrite the file, Use 'echo "text_content" > filename' to write content to a file.
+3. Executing code: Use appropriate commands to run code (e.g., '/usr/bin/python3 script.py' for Python).
 4. Creating directories: Use 'mkdir directory_name' to create new directories.
 5. Listing directory contents: Use 'ls' or 'dir' to list files and directories.
 6. Navigating directories: Use 'cd directory_name' to change directories.
+
+Do not use any commands, that can damage the system. These might include: {DESTRUCTIVE_COMMANDS}
 
 Follow the provided step-by-step process and consider previous actions. Every action must be a CLI command.
 
@@ -121,7 +123,7 @@ def main(query: str):
         console.print(f"[italic]{explanation}[/italic]")
         console.print(f"[bold]Executing:[/bold] {command}")
         
-        if command in DESTRUCTIVE_COMMANDS:
+        if any(cmd in command.lower().split() for cmd in DESTRUCTIVE_COMMANDS):
             console.print(f"[bold red]DESTRUCTIVE COMMAND FOUND![/bold red] {command}")
             break
         
