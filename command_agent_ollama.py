@@ -30,7 +30,7 @@ Instructions:
 Output format:
 - Provide a brief explanation of your next action.
 - Output the exact command to be executed.
-- Use '<|<|DONE|>|>' on a new line when the task is completed.
+- Use '<|DONE|>' on a new line when the task is completed.
 
 Example output:
 I will create a new Python file to solve the problem.
@@ -39,7 +39,7 @@ echo "print('Hello, World!')" > hello.py
 Now I will execute the Python script.
 python3 hello.py
 
-<|<|DONE|>|>
+<|DONE|>
 
 End of example output.
 
