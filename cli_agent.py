@@ -12,17 +12,17 @@ from ollama import Options
 DESTRUCTIVE_COMMANDS = [
     "rm", "rmdir", "dd", "mkfs", "fdisk", "format", 
     "del", "rd", "erase", "chown", "chmod",
-    "truncate", "shred", "sudo", "mv", "cp", "rf"
+    "truncate", "shred", "sudo", "mv", "rf"
     ]
 
-LLM_MODEL = "gemma2:2b-instruct-q8_0"
+LLM_MODEL = "phi3.5:3.8b-mini-instruct-q8_0"
 
 SYSTEM_PROMPT = f"""
 You are an autonomous CLI agent with the ability to read, write, and execute code using proper CLI commands.
 
 Capabilities:
-1. When you need to reading the file: Use 'cat filename' to display file contents.
-2. When you need to rewrite the file, Use 'echo "text_content" > filename' to write content to a file.
+1. Reading files: Use 'cat filename' to display file contents.
+2. Writing files: Use 'echo "content" > filename' to write content to a file.
 3. Executing code: Use appropriate commands to run code (e.g., '/usr/bin/python3 script.py' for Python).
 4. Creating directories: Use 'mkdir directory_name' to create new directories.
 5. Listing directory contents: Use 'ls' or 'dir' to list files and directories.
@@ -70,13 +70,14 @@ def execute_command(command: str, simulate: bool = True) -> Tuple[int, str]:
             return e.returncode, e.output.strip()
 
 def generate_plan(goal: str) -> List[str]:
-    """Generate a plan to achieve the goal with steps enclosed in tags."""
+    """Generate a simple plan to achieve the goal with steps enclosed in tags."""
     plan_prompt = f"""
     Create a step-by-step plan to achieve this goal: {goal}
     Enclose each step in <step></step> tags.
     Example:
     <step>First action to take</step>
     <step>Second action to take</step>
+    The plan must have the smallest amount of steps as possible to achieve the goal.
     """
     plan_response = ask_llm(SYSTEM_PROMPT, plan_prompt)
     return parse_steps(plan_response)
@@ -107,7 +108,7 @@ def main(query: str):
 
     # Generate goal
     goal = ask_llm("You expertly understand problems and rewrite them as clear goals.", 
-                   f"Generate a clear, one-sentence goal to solve this problem: {query}")
+                   f"Generate a clear, one-sentence goal to solve this problem: {query}. Do not return anything else other than one-sentence Goal.")
     console.print(Panel(f"[bold green]Goal:[/bold green] {goal}"))
 
     # Generate plan
@@ -140,3 +141,7 @@ def main(query: str):
 
 if __name__ == "__main__":
     typer.run(main)
+    
+# tested successfully:
+# python3 cli_agent.py "codey.py doesn't work on my macbook, it should count from 1 to 10. fix the file."
+# python3 cli_agent.py "textfile.txt has some grammatic errors. Fix the file."
