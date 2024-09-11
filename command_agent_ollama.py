@@ -66,7 +66,6 @@ def ask_llm_ollama(system_prompt, user_prompt):
 
 # Function to escape shell arguments
 def quote(string: str) -> str:
-    # Equivalent of PHP's escapeshellarg
     return "'{}'".format(string.replace("'", "'\\''"))
 
 # Main function
