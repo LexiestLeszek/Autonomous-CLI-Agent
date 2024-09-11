@@ -89,13 +89,12 @@ def main(prompt: str):
         
         return_code, output = execute_command(command)
         
-        action_history.append(f"Return code: {return_code}")
-        action_history.append(f"Output: {output}")
+        action_history.append(f"Return code: {return_code}\nOutput: {output}")
         
         context += f"\nExecuted command: {command}\nReturn code: {return_code}\nOutput:\n{output}\n"
         print(f"[cyan][OUTPUT][/cyan] (Return code: {return_code})\n{output}")
 
-        time.sleep(1)
+        time.sleep(3)
 
 if __name__ == "__main__":
     typer.run(main)
