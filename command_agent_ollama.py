@@ -7,35 +7,51 @@ import ollama
 from ollama import Options
 from rich import print
 import random
+import re
 
 LLM_MODEL = "gemma2:2b-instruct-q4_0"
 
 SYSTEM = """
-You are an autonomous coding agent with the ability to read, write, and execute code.
+You are an autonomous CLI agent with the ability to read, write, and execute code by using CLI commands.
 
 Your capabilities include:
 1. Reading files: Use cat filename to display file contents.
 2. Writing files: Use echo "content" > filename to write content to a file.
-3. Executing code: Use appropriate commands to run code (e.g., python3 script.py for Python).
+3. Executing code: Use appropriate commands to run code (e.g., python script.py for Python).
 4. Creating directories: Use mkdir directory_name to create new directories.
 5. Listing directory contents: Use ls or dir to list files and directories.
-
-Instructions:
-1. Analyze the current task or problem.
-2. Plan your approach step by step.
-3. Execute one command at a time to progress towards your goal.
-4. After each command, wait for the result before proceeding.
-5. If you encounter an error, analyze it and attempt to correct it.
-6. Continue until the task is completed.
+6. You act accordingly to the provided step-by-step process and previous performed actions.
 
 Output format:
+- Use Goal and current Step to generate output.
 - Provide a brief explanation of your next action.
-- Output the exact command to be executed, preceded by "COMMAND: ".
-- Use '<|DONE|>' on a new line when the whole task is completed.
+- Output the exact command to be executed, starting with "COMMAND".
+
+Example output 1:
+EXPLANATION: I will create a new Python file to solve the problem.
+COMMAND: echo "print('Hello, World!')" > hello.py
+
+Example output 2:
+EXPLANATION: Now I will execute the Python script.
+COMMAND: python3 hello.py
+
+End of example outputs.
 
 Remember to always prioritize efficient and secure coding practices.
-Remember to never write generic phrases like "Let me know how else I can help you!".
+Remember to write only text related to your plans or executed actions. 
+Do not write anything polite or somethig like 'Let me know if you want to explore other examples or have more coding tasks!'.
 """
+
+def get_list_elements(input_string,steps):
+    # Regex pattern to match <li>...</li> tags
+    pattern = r'<li>(.*?)</li>'
+    
+    # Find all matches
+    matches = re.findall(pattern, input_string)
+    
+    # Print each match
+    for match in matches:
+        steps.append(match.strip())
 
 def ask_llm_ollama(system_prompt, user_prompt):
     response = ollama.chat(model=LLM_MODEL,
@@ -57,8 +73,6 @@ def ask_llm_ollama(system_prompt, user_prompt):
 
 def chat(*, prompt: str, system: str | None = None) -> str:
     response = ask_llm_ollama(system or SYSTEM, prompt)
-    print(f"[blue][PROMPT][/blue] {prompt}")
-    print(f"[yellow][RESPONSE][/yellow] {response}")
     return response
 
 def fake_execute_command(command: str) -> tuple[int, str]:
@@ -92,13 +106,29 @@ def execute_command(command: str) -> tuple[int, str]:
     except subprocess.CalledProcessError as e:
         return e.returncode, e.output
 
-def main(prompt: str):
-    context = f"GOAL: {prompt}\n\nCurrent working directory: {os.getcwd()}\n"
+def main(query: str):
+    # Goal and plan setting
+    dir_path = f"Current working directory: {os.getcwd()}"
+    goal = chat(system='You masterfully understand problems and rewrite them into clear goals.',prompt=f"Generate a clear goal in one sentence to solve this problem: {query}")
+    goal_context = f"""{dir_path}
+    Goal: {goal}
+    Generate a step-by-step plan to achieve the Goal. Return only the numbered list of the steps to achieve the plan and nothing else. Each step should be inside a <li></li> tag"""
+    plan = chat(system='you are a master of creating step-by-step plans based on the Goal in the format of numbered list.',prompt=goal_context)
+    print('>>>>>PLAN: ',plan)
+    steps = []
     action_history = []
+    action_history.append(f'Prepare to achieve the goal: {goal}')
+    get_list_elements(plan, steps)
+    steps.append('Final step, only return "<|DONE|>"')
     
-    while True:
-        action_history_str = "\n".join(action_history)
-        full_context = f"{context}\n\nAction History:\n{action_history_str}\n\nWhat is your next action? Explain briefly and provide the command. If the goal is completed ({prompt}), then only return <|DONE|>."
+    for step in steps:
+        full_context = f"""{dir_path}
+        Goal is {goal}
+        Action Plan is {steps}
+        Action History (already performed actions) is {action_history}
+        Current step is {step}
+        Based on the current step, return the CLI command needed to to finish this step and a brief explanation of it.
+        """
         
         response = chat(prompt=full_context)
         
@@ -110,22 +140,23 @@ def main(prompt: str):
         if len(command_parts) < 2:
             command = command_parts[0].strip()
             continue
-
-        explanation = command_parts[0].strip()
-        command = command_parts[1].strip()
         
-        action_history.append(f"Explanation: {explanation}\nCommand: {command}")
+        command = command_parts[1].strip()
         
         print(f"[green][EXECUTING][/green] {command}")
         
-        return_code, output = fake_execute_command(command)
+        return_code, output = execute_command(command)
         
-        action_history.append(f"Return code: {return_code}\nOutput: {output}")
-        
-        context += f"\nExecuted command: {command}\nReturn code: {return_code}\nOutput:\n{output}\n"
+        action_history.append(response)
         print(f"[cyan][OUTPUT][/cyan] (Return code: {return_code})\n{output}")
 
         time.sleep(3)
 
 if __name__ == "__main__":
-    typer.run(main)
+    query = "codey.py doesn't work, it sshould count from 1 to 10. fix it."
+    main(query)
+    
+# Query - user's problem that needs to be solved.    
+# Goal - based on the user's problem (Query), restate it to be a goal that can be achieved
+# Plan - based on the Goal, develop step-by-step actionable plan to achieve the goal
+# Step - based on the Plan and history of previous actions (if any), perform next step.
