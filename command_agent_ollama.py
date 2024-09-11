@@ -5,6 +5,7 @@ import time
 import typer
 import ollama
 from rich import print
+import random
 
 LLM_MODEL = "gemma2:2b-instruct-q4_0"
 
@@ -29,7 +30,7 @@ Instructions:
 Output format:
 - Provide a brief explanation of your next action.
 - Output the exact command to be executed, preceded by "COMMAND: ".
-- Use 'DONE' on a new line when the whole task is completed.
+- Use '<|DONE|>' on a new line when the whole task is completed.
 
 Remember to always prioritize efficient and secure coding practices.
 """
@@ -54,6 +55,30 @@ def chat(*, prompt: str, system: str | None = None) -> str:
     print(f"[yellow][RESPONSE][/yellow] {response}")
     return response
 
+def fake_execute_command(command: str) -> tuple[int, str]:
+    # Simulate a slight delay
+    time.sleep(random.uniform(0.1, 0.5))
+    
+    system_prompt = "You fake the CLI output based on the provided command."
+    
+    user_prompt = f"""
+    Given the following CLI command: '{command}'
+    Generate a realistic CLI output. Consider the following:
+    1. The command might succeed or fail (rarely).
+    2. The output should be concise but realistic.
+    3. Include any relevant file names, directory structures, or data that makes sense.
+    4. If the command is invalid, return an appropriate error message.
+
+    Respond only with the simulated CLI output, nothing else.
+    """
+    
+    output = ask_llm_ollama(system_prompt, user_prompt)
+    
+    # Simulate a return code (mostly 0, occasionally non-zero)
+    return_code = 0 if random.random() < 0.9 else random.randint(1, 127)
+    
+    return return_code, output.strip()
+
 def execute_command(command: str) -> tuple[int, str]:
     try:
         output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, text=True)
@@ -63,15 +88,11 @@ def execute_command(command: str) -> tuple[int, str]:
 
 def main(prompt: str):
     context = f"GOAL: {prompt}\n\nCurrent working directory: {os.getcwd()}\n"
-    action_history = []
     
     while True:
-        action_history_str = "\n".join(action_history)
-        full_context = f"{context}\n\nAction History:\n{action_history_str}\n\nWhat is your next action? Explain briefly and provide the command."
+        response = chat(prompt=f"{context}\nWhat is your next action? Explain briefly and provide the command.")
         
-        response = chat(prompt=full_context)
-        
-        if "DONE" in response.upper():
+        if "<|DONE|>" in response.upper():
             print("[green]Task completed.[/green]")
             break
 
@@ -80,24 +101,15 @@ def main(prompt: str):
             print("[red]Error: No command provided.[/red]")
             continue
 
-        explanation = command_parts[0].strip()
         command = command_parts[1].strip()
-        
-        action_history.append(f"Explanation: {explanation}\nCommand: {command}")
-        
         print(f"[green][EXECUTING][/green] {command}")
         
-        return_code, output = execute_command(command)
-        
-        action_history.append(f"Return code: {return_code}\nOutput: {output}")
+        return_code, output = fake_execute_command(command)
         
         context += f"\nExecuted command: {command}\nReturn code: {return_code}\nOutput:\n{output}\n"
         print(f"[cyan][OUTPUT][/cyan] (Return code: {return_code})\n{output}")
 
-        time.sleep(3)
+        time.sleep(1)
 
 if __name__ == "__main__":
     typer.run(main)
-
-# to run:
-# python3 command_agent_ollama.py "YOUT_TASK_TEXT"
