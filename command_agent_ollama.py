@@ -28,28 +28,14 @@ Instructions:
 
 Output format:
 - Provide a brief explanation of your next action.
-- Output the exact command to be executed.
+- Output the exact command to be executed, preceded by "COMMAND: ".
 - Use '<|DONE|>' on a new line when the whole task is completed.
 
-Example output:
-I will create a new Python file to solve the problem.
-echo "print('Hello, World!')" > hello.py
-
-Now I will execute the Python script.
-python3 hello.py
-
-<|DONE|>
-
-End of example output.
-
 Remember to always prioritize efficient and secure coding practices.
-Remember to write only text related to your plans or executed actions. 
-Do not write anything polite or somethig like 'Let me know if you want to explore other examples or have more coding tasks!'.
 """
 
-
 def ask_llm_ollama(system_prompt, user_prompt):
-    response = ollama.chat(model='qwen2:0.5b', messages=[
+    response = ollama.chat(model=LLM_MODEL, messages=[
         {
             'role': 'system',
             'content': system_prompt,
@@ -60,46 +46,45 @@ def ask_llm_ollama(system_prompt, user_prompt):
         },
     ])
     
-    answer = response['message']['content']
-    return answer
+    return response['message']['content']
 
 def chat(*, prompt: str, system: str | None = None) -> str:
-    if system:
-        response = ask_llm_ollama(system, prompt)
-    else:
-        response = ask_llm_ollama(SYSTEM, prompt)
-
+    response = ask_llm_ollama(system or SYSTEM, prompt)
     print(f"[blue][PROMPT][/blue] {prompt}")
     print(f"[yellow][RESPONSE][/yellow] {response}")
     return response
 
-def main(prompt: str):
-    response = chat(
-     prompt=f"GOAL: {prompt}\n\nWHAT IS YOUR OVERALL PLAN?", 
-     system=SYSTEM
-    )
+def execute_command(command: str) -> tuple[int, str]:
+    try:
+        output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, text=True)
+        return 0, output
+    except subprocess.CalledProcessError as e:
+        return e.returncode, e.output
 
+def main(prompt: str):
+    context = f"GOAL: {prompt}\n\nCurrent working directory: {os.getcwd()}\n"
+    
     while True:
-        response = chat(
-            prompt="SHELL COMMAND TO EXECUTE OR DONE. NO ADDITIONAL CONTEXT OR EXPLANATION:"
-        ).strip()
-        if response == "DONE":
+        response = chat(prompt=f"{context}\nWhat is your next action? Explain briefly and provide the command.")
+        
+        if "<|DONE|>" in response.upper():
+            print("[green]Task completed.[/green]")
             break
 
-        time.sleep(3)
+        command_parts = response.split("COMMAND:", 1)
+        if len(command_parts) < 2:
+            print("[red]Error: No command provided.[/red]")
+            continue
 
-        try:
-            output = subprocess.check_output(
-                response, stderr=subprocess.STDOUT, shell=True
-            ).decode()
-            return_code = 0
-        except subprocess.CalledProcessError as e:
-            output = e.output.decode()
-            return_code = e.returncode
+        command = command_parts[1].strip()
+        print(f"[green][EXECUTING][/green] {command}")
+        
+        return_code, output = execute_command(command)
+        
+        context += f"\nExecuted command: {command}\nReturn code: {return_code}\nOutput:\n{output}\n"
+        print(f"[cyan][OUTPUT][/cyan] (Return code: {return_code})\n{output}")
 
-        response = chat(
-            prompt=f"COMMAND COMPLETED WITH RETURN CODE: {return_code}. OUTPUT:\n{output}\n\nWHAT ARE YOUR OBSERVATIONS?"
-        )
+        time.sleep(1)
 
 if __name__ == "__main__":
     typer.run(main)
