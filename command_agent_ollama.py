@@ -9,6 +9,12 @@ from rich.panel import Panel
 import ollama
 from ollama import Options
 
+DESTRUCTIVE_COMMANDS = [
+    "rm", "rmdir", "dd", "mkfs", "fdisk", "format", 
+    "del", "rd", "erase", "chown", "chmod",
+    "truncate", "shred", "sudo", "mv", "cp", "rf", "sudo"
+    ]
+
 LLM_MODEL = "gemma2:2b-instruct-q8_0"
 
 SYSTEM_PROMPT = """
@@ -106,7 +112,6 @@ def main(query: str):
     plan = generate_plan(goal)
     console.print(Panel("[bold yellow]Plan:[/bold yellow]\n" + "\n".join(f"{i+1}. {step}" for i, step in enumerate(plan))))
 
-
     # Execute plan
     context = f"Current working directory: {os.getcwd()}\n"
     for i, step in enumerate(plan, 1):
@@ -115,6 +120,10 @@ def main(query: str):
         
         console.print(f"[italic]{explanation}[/italic]")
         console.print(f"[bold]Executing:[/bold] {command}")
+        
+        if command in DESTRUCTIVE_COMMANDS:
+            console.print(f"[bold red]DESTRUCTIVE COMMAND FOUND![/bold red] {command}")
+            break
         
         return_code, output = execute_command(command, simulate=False)
         
