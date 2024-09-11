@@ -98,3 +98,6 @@ def main(prompt: str):
 
 if __name__ == "__main__":
     typer.run(main)
+
+# to run:
+# python3 command_agent_ollama.py "YOUT_TASK_TEXT"
