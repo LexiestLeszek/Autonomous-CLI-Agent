@@ -115,3 +115,6 @@ def main(prompt: str):
 # Set up Typer CLI
 if __name__ == "__main__":
     typer.run(main)
+
+# run:
+# python3 command_agent_ollama.py "PROMPT"
