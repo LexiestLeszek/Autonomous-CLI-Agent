@@ -4,6 +4,14 @@
 
 This project implements an autonomous CLI agent that can read, write, and execute code using proper CLI commands. It utilizes a language model to generate plans and execute steps based on user input.
 
+## Usage
+
+To run the agent, execute the following command:
+
+```bash
+python3 autonomous_cli_agent.py "textfile.txt has some grammatic errors. Fix the file."
+```
+
 ## Key Features
 
 - File reading and writing capabilities
@@ -18,14 +26,6 @@ This project implements an autonomous CLI agent that can read, write, and execut
 - `rich`: For enhanced console output formatting
 - `ollama`: For interacting with the language model
 - `subprocess`: For executing shell commands
-
-## Usage
-
-To run the agent, execute the following command:
-
-```bash
-python autonomous_cli_agent.py
-```
 
 The agent will prompt you for a query, generate a goal, create a plan, and then execute the steps one by one.
 
