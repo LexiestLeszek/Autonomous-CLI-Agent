@@ -30,7 +30,7 @@ Instructions:
 Output format:
 - Provide a brief explanation of your next action.
 - Output the exact command to be executed, preceded by "COMMAND: ".
-- Use '<|DONE|>' on a new line when the whole task is completed.
+- Use 'DONE' on a new line when the whole task is completed.
 
 Remember to always prioritize efficient and secure coding practices.
 """
@@ -88,11 +88,15 @@ def execute_command(command: str) -> tuple[int, str]:
 
 def main(prompt: str):
     context = f"GOAL: {prompt}\n\nCurrent working directory: {os.getcwd()}\n"
+    action_history = []
     
     while True:
-        response = chat(prompt=f"{context}\nWhat is your next action? Explain briefly and provide the command.")
+        action_history_str = "\n".join(action_history)
+        full_context = f"{context}\n\nAction History:\n{action_history_str}\n\nWhat is your next action? Explain briefly and provide the command."
         
-        if "<|DONE|>" in response.upper():
+        response = chat(prompt=full_context)
+        
+        if "DONE" in response.upper():
             print("[green]Task completed.[/green]")
             break
 
@@ -101,15 +105,21 @@ def main(prompt: str):
             print("[red]Error: No command provided.[/red]")
             continue
 
+        explanation = command_parts[0].strip()
         command = command_parts[1].strip()
+        
+        action_history.append(f"Explanation: {explanation}\nCommand: {command}")
+        
         print(f"[green][EXECUTING][/green] {command}")
         
         return_code, output = fake_execute_command(command)
         
+        action_history.append(f"Return code: {return_code}\nOutput: {output}")
+        
         context += f"\nExecuted command: {command}\nReturn code: {return_code}\nOutput:\n{output}\n"
         print(f"[cyan][OUTPUT][/cyan] (Return code: {return_code})\n{output}")
 
-        time.sleep(1)
+        time.sleep(3)
 
 if __name__ == "__main__":
     typer.run(main)
