@@ -81,7 +81,7 @@ def fake_execute_command(command: str) -> tuple[int, str]:
     output = ask_llm_ollama(system_prompt, user_prompt)
     
     # Simulate a return code (mostly 0, occasionally non-zero)
-    return_code = 0 if random.random() < 0.9 else random.randint(1, 127)
+    return_code = 0
     
     return return_code, output.strip()
 
@@ -98,17 +98,17 @@ def main(prompt: str):
     
     while True:
         action_history_str = "\n".join(action_history)
-        full_context = f"{context}\n\nAction History:\n{action_history_str}\n\nWhat is your next action? Explain briefly and provide the command."
+        full_context = f"{context}\n\nAction History:\n{action_history_str}\n\nWhat is your next action? Explain briefly and provide the command. If the goal is completed ({prompt}), then only return <|DONE|>."
         
         response = chat(prompt=full_context)
         
-        if "<|DONE|>" in response.upper():
+        if "<|DONE|>" in response:
             print("[green]Task completed.[/green]")
             break
 
         command_parts = response.split("COMMAND:", 1)
         if len(command_parts) < 2:
-            print("[red]Error: No command provided.[/red]")
+            command = command_parts[0].strip()
             continue
 
         explanation = command_parts[0].strip()
