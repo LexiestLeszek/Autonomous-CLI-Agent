@@ -1,138 +1,69 @@
-# Autonomous-CLI-Agent
-Autonomous CLI Agent that uses Local LLM with Ollama to execute tasks in CLI.
-
-# Autonomous Coding Agent
-
-## Table of Contents
-- [Overview](#overview)
-- [Features](#features)
-- [Usage](#usage)
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Contributing](#contributing)
-- [License](#license)
+# Autonomous-CLI-Agent README
 
 ## Overview
 
-This project implements an interactive shell-like environment powered by a large language model (LLM). It allows users to describe goals and receive step-by-step instructions and explanations for achieving those goals through shell commands.
+This project implements an autonomous CLI agent that can read, write, and execute code using proper CLI commands. It utilizes a language model to generate plans and execute steps based on user input.
 
-The Autonomous Coding Agent uses Ollama to interact with an AI model, providing a unique interface between human users and the command line. It's designed to assist with coding tasks, file manipulation, and general system operations.
+## Key Features
 
-## Features
+- File reading and writing capabilities
+- Code execution support
+- Directory management functions
+- Interactive planning and execution process
+- Rich console output formatting
 
-- Interactive shell environment powered by an AI model
-- Step-by-step instructions for complex tasks
-- Real-time observations and explanations after each command execution
-- Colored console output for improved readability
-- Error handling and feedback for failed commands
-- Modular design allowing easy modification and extension
+## Dependencies
+
+- `typer`: For building the command-line interface
+- `rich`: For enhanced console output formatting
+- `ollama`: For interacting with the language model
+- `subprocess`: For executing shell commands
 
 ## Usage
 
-1. Clone the repository:
-   ```
-   git clone https://github.com/yourusername/autonomous-cli-agent.git
-   cd autonomous-cli-agent
-   ```
+To run the agent, execute the following command:
 
-2. Install dependencies:
-   ```
-   pip install typer ollama rich
-   ```
-
-3. Run the application:
-   ```
-   python main.py
-   ```
-
-## Example output
-
-/path/to/autonomous-cli-agent.py "codey.py doesn't work, it sshould count from 1 to 10. Take a look at this file and fix it."
-[PROMPT] GOAL: codey.py doesn't work, it sshould count from 1 to 10. Take a look at this file and fix it.
-
-Current working directory: /path/to/autonomous-cli-agent
-
-
-Action History:
-
-
-What is your next action? Explain briefly and provide the command. If the goal is completed (codey.py doesn't work, it sshould count from 1
-to 10. Take a look at this file and fix it.), then only return <|DONE|>.
-[RESPONSE] Action: Analyze codey.py to identify the issue causing it not to run correctly.
-
-COMMAND: cat codey.py 
-
-
-
-[EXECUTING] cat codey.py
-[OUTPUT] (Return code: 0)
-```
-# codey.py
-```
-[PROMPT] GOAL: codey.py doesn't work, it sshould count from 1 to 10. Take a look at this file and fix it.
-
-Current working directory: /path/to/autonomous-cli-agent
-
-Executed command: cat codey.py
-Return code: 0
-Output:
-```
-# codey.py
+```bash
+python autonomous_cli_agent.py
 ```
 
-
-Action History:
-Explanation: Action: Analyze codey.py to identify the issue causing it not to run correctly.
-Command: cat codey.py
-Return code: 0
-Output: ```
-# codey.py
-```
-
-What is your next action? Explain briefly and provide the command. If the goal is completed (codey.py doesn't work, it sshould count from 1
-to 10. Take a look at this file and fix it.), then only return <|DONE|>.
-[RESPONSE] Action:  Add code to make the script count from 1 to 10.
-
-Command: echo """"
-for i in {1..10}:
-    print(i)
-echo """ > codey.py 
-
-
-<|DONE|> 
-
-Task completed.
-```
-
-## Requirements
-
-- Python 3.7+
-- Typer
-- Ollama
-- Rich
-
-## Installation
-
-1. Install Python (version 3.7+ recommended)
-2. Install the required packages using pip:
-   ```
-   pip install typer ollama rich
-   ```
-3. Ensure Ollama is installed and configured on your system
+The agent will prompt you for a query, generate a goal, create a plan, and then execute the steps one by one.
 
 ## Configuration
 
-The main configuration is done through the `ollama_model` variable at the top of the `main.py` file. You can modify this to use different Ollama models.
+- `DESTRUCTIVE_COMMANDS`: A list of commands that could potentially cause harm if executed
+- `LLM_MODEL`: The default language model used for generating plans and explanations
+- `SYSTEM_PROMPT`: The initial prompt given to the language model
 
-Additional customization options can be added by modifying the `SYSTEM` prompt in the `main.py` file.
+## Functionality Breakdown
 
-## Contributing
+1. `ask_llm`: Interacts with the language model to get responses
+2. `execute_command`: Executes or simulates CLI commands
+3. `generate_plan`: Creates a step-by-step plan to achieve a goal
+4. `parse_steps`: Extracts individual steps from the generated plan
+5. `execute_step`: Determines the next CLI command to execute for a given step
+6. `main`: Orchestrates the entire process, including querying, planning, and execution
 
-Contributions are welcome! Please feel free to submit pull requests or open issues.
+## Safety Features
+
+- Destructive command detection: The agent will stop execution if a destructive command is encountered
+- Simulated execution: Allows for testing without actually running potentially harmful commands
+
+## Development
+
+To contribute to this project:
+
+1. Fork the repository
+2. Clone your forked copy
+3. Set up a virtual environment and install dependencies
+4. Write tests and make changes
+5. Commit your changes and push to your branch
+6. Open a pull request
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the MIT License. See the LICENSE file for details.
 
----
+## Acknowledgments
+
+This project was inspired by the concept of autonomous agents and utilizes open-source libraries for natural language processing and console output formatting.
