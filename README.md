@@ -46,7 +46,64 @@ The Autonomous Coding Agent uses Ollama to interact with an AI model, providing 
    python main.py
    ```
 
-4. Follow the prompts to set up your goal and start interacting with the agent.
+## Example output
+
+/path/to/autonomous-cli-agent.py "codey.py doesn't work, it sshould count from 1 to 10. Take a look at this file and fix it."
+[PROMPT] GOAL: codey.py doesn't work, it sshould count from 1 to 10. Take a look at this file and fix it.
+
+Current working directory: /path/to/autonomous-cli-agent
+
+
+Action History:
+
+
+What is your next action? Explain briefly and provide the command. If the goal is completed (codey.py doesn't work, it sshould count from 1
+to 10. Take a look at this file and fix it.), then only return <|DONE|>.
+[RESPONSE] Action: Analyze codey.py to identify the issue causing it not to run correctly.
+
+COMMAND: cat codey.py 
+
+
+
+[EXECUTING] cat codey.py
+[OUTPUT] (Return code: 0)
+```
+# codey.py
+```
+[PROMPT] GOAL: codey.py doesn't work, it sshould count from 1 to 10. Take a look at this file and fix it.
+
+Current working directory: /path/to/autonomous-cli-agent
+
+Executed command: cat codey.py
+Return code: 0
+Output:
+```
+# codey.py
+```
+
+
+Action History:
+Explanation: Action: Analyze codey.py to identify the issue causing it not to run correctly.
+Command: cat codey.py
+Return code: 0
+Output: ```
+# codey.py
+```
+
+What is your next action? Explain briefly and provide the command. If the goal is completed (codey.py doesn't work, it sshould count from 1
+to 10. Take a look at this file and fix it.), then only return <|DONE|>.
+[RESPONSE] Action:  Add code to make the script count from 1 to 10.
+
+Command: echo """"
+for i in {1..10}:
+    print(i)
+echo """ > codey.py 
+
+
+<|DONE|> 
+
+Task completed.
+```
 
 ## Requirements
 
