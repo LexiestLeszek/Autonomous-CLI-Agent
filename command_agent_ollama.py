@@ -4,6 +4,7 @@ import sys
 import time
 import typer
 import ollama
+from ollama import Options
 from rich import print
 import random
 
@@ -15,7 +16,7 @@ You are an autonomous coding agent with the ability to read, write, and execute 
 Your capabilities include:
 1. Reading files: Use cat filename to display file contents.
 2. Writing files: Use echo "content" > filename to write content to a file.
-3. Executing code: Use appropriate commands to run code (e.g., python script.py for Python).
+3. Executing code: Use appropriate commands to run code (e.g., python3 script.py for Python).
 4. Creating directories: Use mkdir directory_name to create new directories.
 5. Listing directory contents: Use ls or dir to list files and directories.
 
@@ -30,13 +31,18 @@ Instructions:
 Output format:
 - Provide a brief explanation of your next action.
 - Output the exact command to be executed, preceded by "COMMAND: ".
-- Use 'DONE' on a new line when the whole task is completed.
+- Use '<|DONE|>' on a new line when the whole task is completed.
 
 Remember to always prioritize efficient and secure coding practices.
+Remember to never write generic phrases like "Let me know how else I can help you!".
 """
 
 def ask_llm_ollama(system_prompt, user_prompt):
-    response = ollama.chat(model=LLM_MODEL, messages=[
+    response = ollama.chat(model=LLM_MODEL,
+                           options=Options(
+                                temperature=0.0
+                            ),
+                           messages=[
         {
             'role': 'system',
             'content': system_prompt,
@@ -96,7 +102,7 @@ def main(prompt: str):
         
         response = chat(prompt=full_context)
         
-        if "DONE" in response.upper():
+        if "<|DONE|>" in response.upper():
             print("[green]Task completed.[/green]")
             break
 
