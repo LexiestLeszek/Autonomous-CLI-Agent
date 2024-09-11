@@ -30,7 +30,8 @@ Instructions:
 Output format:
 - Provide a brief explanation of your next action.
 - Output the exact command to be executed.
-- Use '<|DONE|>' on a new line when the task is completed.
+- Use '<|Step-Finished|>' on a new line when step is completed.
+- Use '<|DONE|>' on a new line when the whole task is completed.
 
 Example output:
 I will create a new Python file to solve the problem.
@@ -66,6 +67,7 @@ def ask_llm_ollama(system_prompt, user_prompt):
 
 # Function to escape shell arguments
 def quote(string: str) -> str:
+    # Equivalent of PHP's escapeshellarg
     return "'{}'".format(string.replace("'", "'\\''"))
 
 # Main function
