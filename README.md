@@ -32,8 +32,8 @@ The Autonomous Coding Agent uses Ollama to interact with an AI model, providing 
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/autonomous-coding-agent.git
-   cd autonomous-coding-agent
+   git clone https://github.com/yourusername/autonomous-cli-agent.git
+   cd autonomous-cli-agent
    ```
 
 2. Install dependencies:
