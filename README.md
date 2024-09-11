@@ -9,7 +9,7 @@ This project implements an autonomous CLI agent that can read, write, and execut
 To run the agent, execute the following command:
 
 ```bash
-python3 autonomous_cli_agent.py "textfile.txt has some grammatic errors. Fix the file."
+python3 cli_agent.py "textfile.txt has some grammatic errors. Fix the file."
 ```
 
 ## Key Features
