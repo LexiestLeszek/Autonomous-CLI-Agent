@@ -134,8 +134,7 @@ def main(query: str):
         context += f"Executed: {command}\nOutput: {output}\n"
 
         if return_code != 0:
-            console.print(f"[bold red]Command failed with return code {return_code}[/bold red]")
-            break
+            console.print(f"[bold red]Command might have failed with return code {return_code}[/bold red]")
 
     console.print("\n[bold green]Task completed.[/bold green]")
 
