@@ -180,7 +180,7 @@ def main(query: str):
         
         return_code, output = execute_command(command, simulate=False)
         
-        if output is not None:
+        if output is not None and output.strip():
             console.print(Panel(f"[bold]Output:[/bold]\n{output}", border_style="yellow"))
         
         # Update context with the current step's execution details
