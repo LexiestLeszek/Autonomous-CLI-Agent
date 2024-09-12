@@ -15,7 +15,7 @@ DESTRUCTIVE_COMMANDS = [
     "truncate", "shred", "sudo", "mv", "rf"
     ]
 
-LLM_MODEL = "llama3.1:8b-instruct-q8_0"
+LLM_MODEL = "llama3.1:8b-instruct-q5_K_M"
 #LLM_MODEL = "gemma2:2b-instruct-q8_0"
 
 SYSTEM_PROMPT = f"""
@@ -33,6 +33,8 @@ Core Capabilities:
    - Write: 'echo "content" > filename' (overwrites existing content)
    - Append: 'echo "content" >> filename'
    - List: 'ls -l' (detailed), 'ls -a' (include hidden files)
+   - Search: 'grep pattern filename'
+   - Edit: 'sed -i 's/old/new/g' filename'
 
 2. Directory Operations:
    - Create: 'mkdir -p directory_name'
@@ -43,15 +45,6 @@ Core Capabilities:
    - Python: '/usr/bin/python3 script.py'
    - Shell: 'bash script.sh'
    - Make Executable: 'chmod +x filename'
-
-4. Text Processing:
-   - Search: 'grep pattern filename'
-   - Edit: 'sed -i 's/old/new/g' filename'
-
-5. System Information:
-   - System: 'uname -a'
-   - Disk Space: 'df -h'
-   - Memory: 'free -h'
 
 Safety Protocol:
 - NEVER use these potentially destructive commands: {DESTRUCTIVE_COMMANDS}
@@ -110,6 +103,7 @@ def generate_plan(goal: str) -> List[str]:
     """Generate a simple plan to achieve the goal with steps enclosed in tags."""
     plan_prompt = f"""
     Create a step-by-step plan to achieve this goal using CLI commands: {goal}
+    Consider choosing how this goal should be achieved - either by writing a code to do it, or strictly using CLI commands.
     Enclose each step in <step></step> tags.
     Example:
     <step>First action to take</step>
@@ -187,10 +181,10 @@ def main(query: str):
         console.print(Panel(f"[bold]Output:[/bold]\n{output}", border_style="yellow"))
         
         # Update context with the current step's execution details
-        context += f"\nExecuted: {command}\nOutput: {output}\nReturn Code {return_code}"
+        #context += f"\nExecuted: {command}\nOutput: {output}\nReturn Code {return_code}"
         
-        #if return_code != 0:
-        #    console.print(f"[bold red]Command might have failed with return code {return_code}[/bold red]")
+        if return_code != 0:
+            console.print(f"[bold red]Command might have failed with return code {return_code}[/bold red]")
     
     console.print("\n[bold green]Task completed.[/bold green]")
 
