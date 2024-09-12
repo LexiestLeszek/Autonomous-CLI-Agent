@@ -15,7 +15,8 @@ DESTRUCTIVE_COMMANDS = [
     "truncate", "shred", "sudo", "mv", "rf"
     ]
 
-LLM_MODEL = "llama3.1:8b-instruct-q5_K_M"
+LLM_MODEL = "phi3.5:3.8b-mini-instruct-q8_0"
+#LLM_MODEL = "llama3.1:8b-instruct-q5_K_M"
 #LLM_MODEL = "gemma2:2b-instruct-q8_0"
 
 SYSTEM_PROMPT = f"""
@@ -119,12 +120,13 @@ def parse_steps(plan_response: str) -> List[str]:
     steps = re.findall(step_pattern, plan_response, re.DOTALL)
     return [step.strip() for step in steps]
 
-def execute_step(goal: str, step: str, context: str) -> Tuple[str, str]:
+def execute_step(goal: str, plan: str, step: str, context: str) -> Tuple[str, str]:
     """Execute a single step of the plan."""
     step_prompt = f"""
     Task Goal: {goal}
+    Plan: {plan}
     Current Step: {step}
-    Context and Previous Actions: {context}
+    Context: {context}
 
     Based on the above information, determine the next CLI command to execute for this step. Follow these guidelines:
 
@@ -167,7 +169,7 @@ def main(query: str):
     for i, step in enumerate(plan, 1):
         console.print(f"\n[bold cyan]Step {i}:[/bold cyan] {step}")
         
-        explanation, command = execute_step(goal, step, context)
+        explanation, command = execute_step(goal, plan, step, context)
         
         console.print(f"[italic]{explanation}[/italic]")
         console.print(f"[bold]Executing:[/bold] {command}")
@@ -178,13 +180,14 @@ def main(query: str):
         
         return_code, output = execute_command(command, simulate=False)
         
-        console.print(Panel(f"[bold]Output:[/bold]\n{output}", border_style="yellow"))
+        if output is not None:
+            console.print(Panel(f"[bold]Output:[/bold]\n{output}", border_style="yellow"))
         
         # Update context with the current step's execution details
         #context += f"\nExecuted: {command}\nOutput: {output}\nReturn Code {return_code}"
         
-        if return_code != 0:
-            console.print(f"[bold red]Command might have failed with return code {return_code}[/bold red]")
+        #if return_code != 0:
+        #    console.print(f"[bold red]Command might have failed with return code {return_code}[/bold red]")
     
     console.print("\n[bold green]Task completed.[/bold green]")
 
@@ -194,3 +197,5 @@ if __name__ == "__main__":
 # tested successfully:
 # python3 cli_agent.py "codey.py doesn't work on my macbook, it should count from 1 to 10. fix the file."
 # python3 cli_agent.py "textfile.txt has some grammatic errors. Fix the file."
+# python3 cli_agent.py "in this directory, create a folder 'my files' and 10 folders inside it, called filen where n is the number from 1 to 10"
+# 
