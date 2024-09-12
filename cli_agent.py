@@ -15,7 +15,8 @@ DESTRUCTIVE_COMMANDS = [
     "truncate", "shred", "sudo", "mv", "rf"
     ]
 
-LLM_MODEL = "gemma2:2b-instruct-q8_0"
+LLM_MODEL = "llama3.1:8b-instruct-q8_0"
+#LLM_MODEL = "gemma2:2b-instruct-q8_0"
 
 SYSTEM_PROMPT = f"""
 You are an autonomous CLI agent designed to interpret user queries and execute appropriate commands on a Unix-like system. Your primary goal is to understand the task, create a plan, and execute it using CLI commands.
@@ -186,10 +187,10 @@ def main(query: str):
         console.print(Panel(f"[bold]Output:[/bold]\n{output}", border_style="yellow"))
         
         # Update context with the current step's execution details
-        context += f"\nExecuted: {command}\nOutput: {output}\n"
+        context += f"\nExecuted: {command}\nOutput: {output}\nReturn Code {return_code}"
         
-        if return_code != 0:
-            console.print(f"[bold red]Command might have failed with return code {return_code}[/bold red]")
+        #if return_code != 0:
+        #    console.print(f"[bold red]Command might have failed with return code {return_code}[/bold red]")
     
     console.print("\n[bold green]Task completed.[/bold green]")
 
