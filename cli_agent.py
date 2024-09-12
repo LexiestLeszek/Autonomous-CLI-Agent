@@ -72,7 +72,7 @@ def execute_command(command: str, simulate: bool = True) -> Tuple[int, str]:
 def generate_plan(goal: str) -> List[str]:
     """Generate a simple plan to achieve the goal with steps enclosed in tags."""
     plan_prompt = f"""
-    Create a step-by-step plan to achieve this goal: {goal}
+    Create a step-by-step plan to achieve this goal using CLI commands: {goal}
     Enclose each step in <step></step> tags.
     Example:
     <step>First action to take</step>
@@ -144,58 +144,3 @@ if __name__ == "__main__":
 # tested successfully:
 # python3 cli_agent.py "codey.py doesn't work on my macbook, it should count from 1 to 10. fix the file."
 # python3 cli_agent.py "textfile.txt has some grammatic errors. Fix the file."
-
-
-'''
-zsh: cli_agent.py "codey.py doesn't work on my macbook, it should count from 1 to 10. fix the file."
-╭────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ Query: codey.py doesn't work on my macbook, it should count from 1 to 10. fix the file.                                │
-╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-╭────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ Goal: Rewrite codey.py to correctly implement a loop that counts from 1 to 10 and outputs the results.                 │
-│                                                                                                                        │
-╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-╭────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ Plan:                                                                                                                  │
-│ 1. Open codey.py                                                                                                       │
-│ 2. Identify the loop that needs modification                                                                           │
-│ 3. Rewrite the loop to count from 1 to 10 and print each number                                                        │
-╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-
-Step 1: Open codey.py
-To open codey.py, we need to use the 'cat' command.
-Executing: cat codey.py
-╭────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ Output:                                                                                                                │
-│ for i in range(2, 3):                                                                                                  │
-│     print(i)                                                                                                           │
-╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-
-Step 2: Identify the loop that needs modification
-We need to modify the loop to count from 1 to 10.
-Executing: echo "for i in range(1, 11):\n    print(i)" > codey.py
-╭────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ Output:                                                                                                                │
-│                                                                                                                        │
-╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-
-Step 3: Rewrite the loop to count from 1 to 10 and print each number
-The goal is to rewrite the loop to count from 1 to 10 and print each number. We need to execute the code that will achieve
-this.
-Executing: python3 codey.py
-╭────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ Output:                                                                                                                │
-│ 1                                                                                                                      │
-│ 2                                                                                                                      │
-│ 3                                                                                                                      │
-│ 4                                                                                                                      │
-│ 5                                                                                                                      │
-│ 6                                                                                                                      │
-│ 7                                                                                                                      │
-│ 8                                                                                                                      │
-│ 9                                                                                                                      │
-│ 10                                                                                                                     │
-╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-
-Task completed.
-'''
