@@ -11,18 +11,18 @@ from ollama import Options
 
 DESTRUCTIVE_COMMANDS = [
     "rm", "rmdir", "dd", "mkfs", "fdisk", "format", 
-    "del", "rd", "erase", "chown", "chmod",
+    "del", "rd", "erase", "chown",
     "truncate", "shred", "sudo", "mv", "rf"
     ]
 
-LLM_MODEL = "phi3.5:3.8b-mini-instruct-q8_0"
+LLM_MODEL = "gemma2:2b-instruct-q8_0"
 
 SYSTEM_PROMPT = f"""
 You are an autonomous CLI agent with the ability to read, write, and execute code using proper CLI commands.
 
 Capabilities:
 1. Reading files: Use 'cat filename' to display file contents.
-2. Writing files: Use 'echo "content" > filename' to write content to a file.
+2. Writing files: Use 'echo "content" > filename' to write content to a file. Pay attention that this command rewrites the whole file content.
 3. Executing code: Use appropriate commands to run code (e.g., '/usr/bin/python3 script.py' for Python).
 4. Creating directories: Use 'mkdir directory_name' to create new directories.
 5. Listing directory contents: Use 'ls' or 'dir' to list files and directories.
@@ -144,3 +144,57 @@ if __name__ == "__main__":
 # tested successfully:
 # python3 cli_agent.py "codey.py doesn't work on my macbook, it should count from 1 to 10. fix the file."
 # python3 cli_agent.py "textfile.txt has some grammatic errors. Fix the file."
+
+
+zsh: cli_agent.py "codey.py doesn't work on my macbook, it should count from 1 to 10. fix the file."
+╭────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Query: codey.py doesn't work on my macbook, it should count from 1 to 10. fix the file.                                │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Goal: Rewrite codey.py to correctly implement a loop that counts from 1 to 10 and outputs the results.                 │
+│                                                                                                                        │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Plan:                                                                                                                  │
+│ 1. Open codey.py                                                                                                       │
+│ 2. Identify the loop that needs modification                                                                           │
+│ 3. Rewrite the loop to count from 1 to 10 and print each number                                                        │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+Step 1: Open codey.py
+To open codey.py, we need to use the 'cat' command.
+Executing: cat codey.py
+╭────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Output:                                                                                                                │
+│ for i in range(2, 3):                                                                                                  │
+│     print(i)                                                                                                           │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+Step 2: Identify the loop that needs modification
+We need to modify the loop to count from 1 to 10.
+Executing: echo "for i in range(1, 11):\n    print(i)" > codey.py
+╭────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Output:                                                                                                                │
+│                                                                                                                        │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+Step 3: Rewrite the loop to count from 1 to 10 and print each number
+The goal is to rewrite the loop to count from 1 to 10 and print each number. We need to execute the code that will achieve
+this.
+Executing: python3 codey.py
+╭────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Output:                                                                                                                │
+│ 1                                                                                                                      │
+│ 2                                                                                                                      │
+│ 3                                                                                                                      │
+│ 4                                                                                                                      │
+│ 5                                                                                                                      │
+│ 6                                                                                                                      │
+│ 7                                                                                                                      │
+│ 8                                                                                                                      │
+│ 9                                                                                                                      │
+│ 10                                                                                                                     │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+Task completed.
+'''
