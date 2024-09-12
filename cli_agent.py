@@ -105,6 +105,7 @@ def generate_plan(goal: str) -> List[str]:
     plan_prompt = f"""
     Create a step-by-step plan to achieve this goal using CLI commands: {goal}
     Consider choosing how this goal should be achieved - either by writing a code to do it, or strictly using CLI commands.
+    If you write code, pay attention for it to have print() statements so that you could test it in the next steps.
     Enclose each step in <step></step> tags.
     Example:
     <step>First action to take</step>
@@ -156,7 +157,7 @@ def main(query: str):
     console.print(Panel(f"[bold blue]Query:[/bold blue] {query}"))
 
     # Generate goal
-    goal = ask_llm("You expertly understand problems and rewrite them as clear goals.", 
+    goal = ask_llm("You expertly understand problems and rewrite them as clear one-sentence goals.", 
                    f"Generate a clear, one-sentence goal to solve this problem: {query}. Do not return anything else other than one-sentence Goal.")
     console.print(Panel(f"[bold green]Goal:[/bold green] {goal}"))
 
@@ -171,8 +172,8 @@ def main(query: str):
         
         explanation, command = execute_step(goal, plan, step, context)
         
-        console.print(f"[italic]{explanation}[/italic]")
-        console.print(f"[bold]Executing:[/bold] {command}")
+        console.print(f"\n[bold]Explanation:[/bold] [italic]{explanation}[/italic]")
+        console.print(f"\n[bold]Executing:[/bold] {command}")
         
         if any(cmd in command.lower().split() for cmd in DESTRUCTIVE_COMMANDS):
             console.print(f"[bold red]DESTRUCTIVE COMMAND FOUND![/bold red] {command}")
@@ -180,8 +181,8 @@ def main(query: str):
         
         return_code, output = execute_command(command, simulate=False)
         
-        if output is not None and output.strip():
-            console.print(Panel(f"[bold]Output:[/bold]\n{output}", border_style="yellow"))
+        if output:
+            console.print(Panel(f"[bold]Output:[/bold]\n{output}\n\n[bold]Return Code:[/bold {return_code}", border_style="yellow"))
         
         # Update context with the current step's execution details
         #context += f"\nExecuted: {command}\nOutput: {output}\nReturn Code {return_code}"
@@ -189,7 +190,7 @@ def main(query: str):
         #if return_code != 0:
         #    console.print(f"[bold red]Command might have failed with return code {return_code}[/bold red]")
     
-    console.print("\n[bold green]Task completed.[/bold green]")
+    console.print("\n[bold green]Task completed.[/bold green]\n")
 
 if __name__ == "__main__":
     typer.run(main)
