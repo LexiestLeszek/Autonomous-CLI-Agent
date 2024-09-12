@@ -24,7 +24,7 @@ You are an autonomous CLI agent designed to interpret user queries and execute a
 
 Role and Responsibilities:
 1. Interpret user queries and translate them into actionable CLI tasks.
-2. Generate a step-by-step plan to accomplish the given task.
+2. Generate a step-by-step plan to accomplish the given task. The plan should take into account the results of previous steps, along with testing execution of CLI commands.
 3. Execute each step using appropriate CLI commands.
 4. Provide clear explanations for each action taken.
 
@@ -103,9 +103,11 @@ def execute_command(command: str, simulate: bool = True) -> Tuple[int, str]:
 def generate_plan(goal: str) -> List[str]:
     """Generate a simple plan to achieve the goal with steps enclosed in tags."""
     plan_prompt = f"""
+    Current working directory: {os.getcwd()}
     Create a step-by-step plan to achieve this goal using CLI commands: {goal}
     Consider choosing how this goal should be achieved - either by writing a code to do it, or strictly using CLI commands.
     If you write code, pay attention for it to have print() statements so that you could test it in the next steps.
+    If you write code, make sure you have steps to execute it.
     Enclose each step in <step></step> tags.
     Example:
     <step>First action to take</step>
@@ -121,13 +123,14 @@ def parse_steps(plan_response: str) -> List[str]:
     steps = re.findall(step_pattern, plan_response, re.DOTALL)
     return [step.strip() for step in steps]
 
-def execute_step(goal: str, plan: str, step: str, context: str) -> Tuple[str, str]:
+def execute_step(goal: str, plan: str, step: str, history: str) -> Tuple[str, str]:
     """Execute a single step of the plan."""
     step_prompt = f"""
     Task Goal: {goal}
     Plan: {plan}
+    {history}
     Current Step: {step}
-    Context: {context}
+    Current working directory: {os.getcwd()}
 
     Based on the above information, determine the next CLI command to execute for this step. Follow these guidelines:
 
@@ -166,11 +169,11 @@ def main(query: str):
     console.print(Panel("[bold yellow]Plan:[/bold yellow]\n" + "\n".join(f"{i+1}. {step}" for i, step in enumerate(plan))))
 
     # Execute plan
-    context = f"Current working directory: {os.getcwd()}\n"
+    history = f''
     for i, step in enumerate(plan, 1):
         console.print(f"\n[bold cyan]Step {i}:[/bold cyan] {step}")
         
-        explanation, command = execute_step(goal, plan, step, context)
+        explanation, command = execute_step(goal, plan, step, history)
         
         console.print(f"\n[bold]Explanation:[/bold] [italic]{explanation}[/italic]")
         console.print(f"\n[bold]Executing:[/bold] {command}")
@@ -182,10 +185,10 @@ def main(query: str):
         return_code, output = execute_command(command, simulate=False)
         
         if output:
-            console.print(Panel(f"[bold]Output:[/bold]\n{output}\n\n[bold]Return Code:[/bold {return_code}", border_style="yellow"))
+            console.print(Panel(f"[bold]Output:[/bold]\n{output}\n\n[bold]Return Code:[/bold] {return_code}", border_style="yellow"))
         
-        # Update context with the current step's execution details
-        #context += f"\nExecuted: {command}\nOutput: {output}\nReturn Code {return_code}"
+        #Update context with the current step's execution details
+        history += f"\nPrevious Step: {step}\nExecuted command in previous step: {command}\nOutput of the previous step: {output}\n\n"
         
         #if return_code != 0:
         #    console.print(f"[bold red]Command might have failed with return code {return_code}[/bold red]")
@@ -199,4 +202,4 @@ if __name__ == "__main__":
 # python3 cli_agent.py "codey.py doesn't work on my macbook, it should count from 1 to 10. fix the file."
 # python3 cli_agent.py "textfile.txt has some grammatic errors. Fix the file."
 # python3 cli_agent.py "in this directory, create a folder 'my files' and 10 folders inside it, called filen where n is the number from 1 to 10"
-# 
+# python3 cli_agent.py "create a python file that takes excel file and prints each cell content in column B into the terminal"
