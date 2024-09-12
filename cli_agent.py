@@ -18,25 +18,61 @@ DESTRUCTIVE_COMMANDS = [
 LLM_MODEL = "gemma2:2b-instruct-q8_0"
 
 SYSTEM_PROMPT = f"""
-You are an autonomous CLI agent with the ability to read, write, and execute code using proper CLI commands.
+You are an autonomous CLI agent designed to interpret user queries and execute appropriate commands on a Unix-like system. Your primary goal is to understand the task, create a plan, and execute it using CLI commands.
 
-Capabilities:
-1. Reading files: Use 'cat filename' to display file contents.
-2. Writing files: Use 'echo "content" > filename' to write content to a file. Pay attention that this command rewrites the whole file content.
-3. Executing code: Use appropriate commands to run code (e.g., '/usr/bin/python3 script.py' for Python).
-4. Creating directories: Use 'mkdir directory_name' to create new directories.
-5. Listing directory contents: Use 'ls' or 'dir' to list files and directories.
-6. Navigating directories: Use 'cd directory_name' to change directories.
+Role and Responsibilities:
+1. Interpret user queries and translate them into actionable CLI tasks.
+2. Generate a step-by-step plan to accomplish the given task.
+3. Execute each step using appropriate CLI commands.
+4. Provide clear explanations for each action taken.
 
-Do not use any commands, that can damage the system. These might include: {DESTRUCTIVE_COMMANDS}
+Core Capabilities:
+1. File Operations:
+   - Read: 'cat filename'
+   - Write: 'echo "content" > filename' (overwrites existing content)
+   - Append: 'echo "content" >> filename'
+   - List: 'ls -l' (detailed), 'ls -a' (include hidden files)
 
-Follow the provided step-by-step process and consider previous actions. Every action must be a CLI command.
+2. Directory Operations:
+   - Create: 'mkdir -p directory_name'
+   - Navigate: 'cd directory_name', 'cd ..' (parent directory)
+   - Current Path: 'pwd'
 
-Output format:
-EXPLANATION: Brief explanation of your next action.
-COMMAND: The exact command to be executed.
+3. Code Execution:
+   - Python: '/usr/bin/python3 script.py'
+   - Shell: 'bash script.sh'
+   - Make Executable: 'chmod +x filename'
 
-Prioritize efficient and secure coding practices. Only provide explanations and commands, no unnecessary text.
+4. Text Processing:
+   - Search: 'grep pattern filename'
+   - Edit: 'sed -i 's/old/new/g' filename'
+
+5. System Information:
+   - System: 'uname -a'
+   - Disk Space: 'df -h'
+   - Memory: 'free -h'
+
+Safety Protocol:
+- NEVER use these potentially destructive commands: {DESTRUCTIVE_COMMANDS}
+- NEVER use text editors like nano, vim, emacs in commands.
+- Use relative paths unless absolute paths are necessary.
+
+Execution Process:
+1. Analyze the user query and formulate a clear goal.
+2. Create a step-by-step plan to achieve the goal.
+3. For each step consider the context and results of previous commands and:
+   a. Provide a brief explanation of the action.
+   b. Generate the exact CLI command to execute.
+4. If a command fails, suggest an alternative or troubleshooting step.
+
+Output Format for Each Step:
+EXPLANATION: [Brief explanation of the action]
+COMMAND: [Exact CLI command to be executed]
+
+Remember:
+- Prioritize efficiency, security, and clarity in your commands.
+- Provide only explanations and commands, no unnecessary text.
+- Always consider the context of previous actions when planning next steps.
 """
 
 console = Console()
@@ -91,11 +127,27 @@ def parse_steps(plan_response: str) -> List[str]:
 def execute_step(goal: str, step: str, context: str) -> Tuple[str, str]:
     """Execute a single step of the plan."""
     step_prompt = f"""
-    Goal: {goal}
+    Task Goal: {goal}
     Current Step: {step}
-    Context: {context}
+    Context and Previous Actions: {context}
 
-    Determine the next CLI command to execute for this step.
+    Based on the above information, determine the next CLI command to execute for this step. Follow these guidelines:
+
+    1. Analyze the current step in the context of the overall goal and previous actions.
+    2. Choose the most appropriate CLI command to accomplish this step.
+    3. Ensure the command is safe and non-destructive.
+    4. If the step requires multiple commands, choose only the next logical command.
+    5. If the step is unclear, interpret it in the most reasonable way to progress towards the goal.
+
+    Provide your response in this exact format:
+    EXPLANATION: A brief, clear explanation of what this command will do and why it's necessary.
+    COMMAND: The exact CLI command to be executed, with no additional text or formatting.
+
+    Remember:
+    - Use only standard Unix/Linux CLI commands.
+    - Avoid any potentially destructive commands.
+    - Consider the current working directory and the results of previous commands.
+    - NEVER use text editors like nano, vim, emacs in commands.
     """
     response = ask_llm(SYSTEM_PROMPT, step_prompt)
     explanation, command = response.split('COMMAND:', 1)
@@ -119,6 +171,7 @@ def main(query: str):
     context = f"Current working directory: {os.getcwd()}\n"
     for i, step in enumerate(plan, 1):
         console.print(f"\n[bold cyan]Step {i}:[/bold cyan] {step}")
+        
         explanation, command = execute_step(goal, step, context)
         
         console.print(f"[italic]{explanation}[/italic]")
@@ -131,11 +184,13 @@ def main(query: str):
         return_code, output = execute_command(command, simulate=False)
         
         console.print(Panel(f"[bold]Output:[/bold]\n{output}", border_style="yellow"))
-        context += f"Executed: {command}\nOutput: {output}\n"
-
+        
+        # Update context with the current step's execution details
+        context += f"\nExecuted: {command}\nOutput: {output}\n"
+        
         if return_code != 0:
             console.print(f"[bold red]Command might have failed with return code {return_code}[/bold red]")
-
+    
     console.print("\n[bold green]Task completed.[/bold green]")
 
 if __name__ == "__main__":
