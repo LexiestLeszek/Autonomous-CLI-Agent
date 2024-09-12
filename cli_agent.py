@@ -146,6 +146,7 @@ if __name__ == "__main__":
 # python3 cli_agent.py "textfile.txt has some grammatic errors. Fix the file."
 
 
+'''
 zsh: cli_agent.py "codey.py doesn't work on my macbook, it should count from 1 to 10. fix the file."
 ╭────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
 │ Query: codey.py doesn't work on my macbook, it should count from 1 to 10. fix the file.                                │
